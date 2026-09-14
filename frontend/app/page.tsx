@@ -1,19 +1,17 @@
-import type { Metadata } from "next";
-import Image from "next/image";
+"use client";
 
-export const metadata: Metadata = {
-  title: "Deyar — Discover Expert Private Teachers & Book Lessons",
-  description:
-    "Deyar connects eager learners with verified, passionate private teachers for 1-on-1 personalized lessons in languages, STEM, arts, and more.",
-};
+import { useState } from "react";
+import Image from "next/image";
+import { useAuth } from "@/context/AuthContext";
+import AuthModal from "@/components/AuthModal";
 
 const FEATURED_SUBJECTS = [
-  { name: "English & ESL", teachers: "120+ tutors", icon: "🌍", color: "from-blue-500/10 to-indigo-500/10" },
-  { name: "Mathematics & Calculus", teachers: "85+ tutors", icon: "📐", color: "from-emerald-500/10 to-teal-500/10" },
-  { name: "Arabic Language", teachers: "64+ tutors", icon: "📖", color: "from-amber-500/10 to-orange-500/10" },
-  { name: "Computer Science & Python", teachers: "92+ tutors", icon: "💻", color: "from-purple-500/10 to-pink-500/10" },
-  { name: "Physics & Chemistry", teachers: "48+ tutors", icon: "🔬", color: "from-cyan-500/10 to-blue-500/10" },
-  { name: "Music & Piano", teachers: "36+ tutors", icon: "🎵", color: "from-rose-500/10 to-red-500/10" },
+  { name: "English & ESL", teachers: "120+ tutors", icon: "🌍" },
+  { name: "Mathematics & Calculus", teachers: "85+ tutors", icon: "📐" },
+  { name: "Arabic Language", teachers: "64+ tutors", icon: "📖" },
+  { name: "Computer Science & Python", teachers: "92+ tutors", icon: "💻" },
+  { name: "Physics & Chemistry", teachers: "48+ tutors", icon: "🔬" },
+  { name: "Music & Piano", teachers: "36+ tutors", icon: "🎵" },
 ];
 
 const SAMPLE_TEACHERS = [
@@ -27,7 +25,6 @@ const SAMPLE_TEACHERS = [
     instantBooking: true,
     avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80",
     badge: "Super Teacher",
-    nextSlot: "Today at 4:00 PM",
   },
   {
     name: "Marcus Vance",
@@ -39,7 +36,6 @@ const SAMPLE_TEACHERS = [
     instantBooking: true,
     avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
     badge: "Top Rated",
-    nextSlot: "Tomorrow at 10:00 AM",
   },
   {
     name: "Layla Chen",
@@ -51,7 +47,6 @@ const SAMPLE_TEACHERS = [
     instantBooking: false,
     avatar: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&auto=format&fit=crop&q=80",
     badge: "Popular",
-    nextSlot: "Request Booking",
   },
 ];
 
@@ -74,10 +69,26 @@ const HOW_IT_WORKS = [
 ];
 
 export default function Home() {
+  const { user, loading, logout } = useAuth();
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [authMode, setAuthMode] = useState<"login" | "signup">("login");
+
+  const openAuth = (mode: "login" | "signup") => {
+    setAuthMode(mode);
+    setAuthModalOpen(true);
+  };
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 selection:bg-teal-500 selection:text-black">
+      {/* Auth Modal */}
+      <AuthModal
+        isOpen={authModalOpen}
+        initialMode={authMode}
+        onClose={() => setAuthModalOpen(false)}
+      />
+
       {/* Navigation */}
-      <header className="sticky top-0 z-50 border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-md">
+      <header className="sticky top-0 z-40 border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-md">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-teal-400 to-emerald-400 font-bold text-slate-950 text-xl shadow-lg shadow-teal-500/20">
@@ -101,12 +112,38 @@ export default function Home() {
           </nav>
 
           <div className="flex items-center gap-3">
-            <button className="rounded-lg px-4 py-2 text-sm font-medium text-slate-300 transition hover:text-white">
-              Log in
-            </button>
-            <button className="rounded-lg bg-teal-400 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-teal-300 shadow-md shadow-teal-500/10">
-              Sign up
-            </button>
+            {loading ? (
+              <div className="h-8 w-24 animate-pulse rounded-lg bg-slate-800" />
+            ) : user ? (
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-medium text-slate-300">
+                  Hi, {user.first_name || user.email.split("@")[0]}
+                </span>
+                <button
+                  onClick={() => logout()}
+                  className="rounded-lg border border-slate-700 px-3 py-1.5 text-xs font-semibold text-slate-300 hover:border-slate-500 hover:text-white transition"
+                >
+                  Log out
+                </button>
+              </div>
+            ) : (
+              <>
+                <button
+                  id="nav-login-btn"
+                  onClick={() => openAuth("login")}
+                  className="rounded-lg px-4 py-2 text-sm font-medium text-slate-300 transition hover:text-white"
+                >
+                  Log in
+                </button>
+                <button
+                  id="nav-signup-btn"
+                  onClick={() => openAuth("signup")}
+                  className="rounded-lg bg-teal-400 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-teal-300 shadow-md shadow-teal-500/10"
+                >
+                  Sign up
+                </button>
+              </>
+            )}
           </div>
         </div>
       </header>
@@ -155,8 +192,11 @@ export default function Home() {
               </div>
 
               <div className="flex items-center gap-2">
-                <button className="w-full h-full min-h-[50px] rounded-xl bg-gradient-to-r from-teal-400 to-emerald-400 px-6 font-semibold text-slate-950 transition hover:brightness-110 shadow-lg shadow-teal-500/20">
-                  Search Teachers
+                <button
+                  onClick={() => openAuth("signup")}
+                  className="w-full h-full min-h-[50px] rounded-xl bg-gradient-to-r from-teal-400 to-emerald-400 px-6 font-semibold text-slate-950 transition hover:brightness-110 shadow-lg shadow-teal-500/20"
+                >
+                  Get Started Free
                 </button>
               </div>
             </div>
@@ -194,7 +234,8 @@ export default function Home() {
             {FEATURED_SUBJECTS.map((sub) => (
               <div
                 key={sub.name}
-                className="group relative flex items-center gap-4 rounded-xl border border-slate-800/90 bg-slate-900/50 p-5 transition hover:border-teal-500/40 hover:bg-slate-900/80"
+                className="group relative flex items-center gap-4 rounded-xl border border-slate-800/90 bg-slate-900/50 p-5 transition hover:border-teal-500/40 hover:bg-slate-900/80 cursor-pointer"
+                onClick={() => openAuth("signup")}
               >
                 <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-slate-800/80 text-2xl group-hover:scale-105 transition">
                   {sub.icon}
@@ -261,7 +302,10 @@ export default function Home() {
                       <span className="text-xs text-slate-500">Hourly from</span>
                       <p className="text-lg font-bold text-white">{teacher.rate}<span className="text-xs font-normal text-slate-400">/hr</span></p>
                     </div>
-                    <button className="rounded-lg bg-slate-800 px-4 py-2 text-xs font-semibold text-white transition hover:bg-teal-400 hover:text-slate-950">
+                    <button
+                      onClick={() => openAuth("signup")}
+                      className="rounded-lg bg-slate-800 px-4 py-2 text-xs font-semibold text-white transition hover:bg-teal-400 hover:text-slate-950"
+                    >
                       View Schedule
                     </button>
                   </div>
@@ -309,9 +353,11 @@ export default function Home() {
           </div>
 
           <div className="flex items-center gap-6 text-xs text-slate-400">
+            <button onClick={() => openAuth("signup")} className="hover:text-white transition">
+              Become a Teacher
+            </button>
             <a href="#" className="hover:text-white transition">Privacy Policy</a>
             <a href="#" className="hover:text-white transition">Terms of Service</a>
-            <a href="#" className="hover:text-white transition">Become a Teacher</a>
           </div>
         </div>
       </footer>
